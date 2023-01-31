@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC RESEND VERIFICATION</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+{% endblock %}
+
+{% block js_functions %}
+function doSearch() {
+  $('#loader').show();
+  var email = $('#email').val().trim();
+  $('#form-field-container').html("");
+
+  Helpers.axPost( "{{ url_for('api.user_resend_verify_code') }}", {
+    "email": email
+  }, (data) => {
+    var tmpl = tmplt('oooops');
+
+    if ( data.status == "not_implemented" ) {tmpl = tmplt('not_implemented');}
+
+    $('#loader').hide();
+    $('#form-field-container').html(tmpl({ msg: data.msg, status: data.status }) );
+  })
+}
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_oooops">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, oooooops. Unhandled status '<%= status %>'.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_not_implemented">
+  <!--
+  <div class="offset-2 col-8 text-center">
+    Sorry but the Elves haven't yet implemented this functoinality. We have been notified of it's usage.
+  </div>
+  -->
+  </div>
+{% endblock %}
+
+{% block body %}
+<div class="container-xxl bd-layout " style='margin-left: 5px; margin-right: 5px; margin-top: 5px;margin-bottom: 75px;'>
+
+  <div class='row mt-4'>
+    <div class='col-12'>
+      <div class="container-fluid" id='playlist-links'
+           style="overflow-y: hidden; overflow-x: auto;">
+        <div class="row flex-row flex-nowrap" >
+          <img id=loader
+               width=30
+               height=30
+               style='display: none;'
+               src='/static/images/loader.svg'/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-2 col-8 text-center">
+      <form autocomplete="off" onsubmit="doSearch(); return false;">
+        <div class="row"
+             id="form-field-container"
+             style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="text"
+                 id="email"
+                 value="{{ session['email'] }}"
+                 placeholder="Email"></input>
+
+          <div class="row mt-4">
+            <div class="col-12 text-center">
+              <button
+                type="button"
+                onclick="doSearch(); return false;"
+                >Resend</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

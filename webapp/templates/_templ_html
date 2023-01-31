@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title> ########## TITILE LKADS #########</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+{% endblock %}
+
+{% block js_functions %}
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_XXXXXX">
+  <!--
+  -->
+  </div>
+{% endblock %}
+
+{% block body %}
+{% endblock %}

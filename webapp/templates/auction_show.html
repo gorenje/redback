@@ -1,0 +1,332 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC AUCTION PAGE</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore,moment" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+var socket = new WebSocket('{{ getenv("WEBSOCKET_SERVER") }}/ws/bnbc');
+var allDeclinedAmounts = [];
+var proposalCreatedAt = moment('{{ proposal["proposal_created_at"] | safe }}');
+{% endblock %}
+
+{% block js_functions %}
+
+function initSocket() {
+  socket.onmessage = function (msg) {
+    var dt = JSON.parse(msg.data);
+
+    if ( dt.data.proposal_uuid != '{{ proposal["uuid"] }}' ) {
+      return;
+    }
+
+    if ( dt.type == "bid_accepted") {
+      window.location.reload()
+    }
+
+    if ( dt.type == "bid_declined" ) {
+      strikeThroughDeclined( dt.data.amount );
+    }
+
+    if ( dt.type == "highest_bid" ) {
+      dt = dt.data;
+
+      if ( $('#bid-amount-' + dt["amount"]).length > 0 ) { return; }
+
+      var chb_tmpl = tmplt('current_highest_bid');
+      var ph_tmpl = tmplt('show_previous_bid');
+
+      var currdata = {
+        amount: $('#current_highest_bid').data("amount"),
+        firstname: $('#current_highest_bid').data("firstname"),
+        surname: $('#current_highest_bid').data("surname"),
+        created_at: $('#current_highest_bid').data("created_at"),
+        ismine: $('#current_highest_bid').data("ismine"),
+      };
+
+      var newdata = {
+        amount: dt["amount"],
+        firstname: dt["bidder_firstname"],
+        surname: dt["bidder_surname"],
+        created_at: dt["updated_at"],
+        ismine: (dt["bidder_uuid"] == "{{ session['user_id'] }}")
+      };
+
+      $('#no_previous_bids_container').remove();
+      $('#current_highest_bid_container').fadeOut( 300, () => {
+        $('#current_highest_bid_container').html(chb_tmpl(newdata)).fadeIn(300);
+      });
+
+      var newpb = $(ph_tmpl(currdata));
+      newpb.hide();
+      $('#previous_bids_container').prepend(  newpb );
+      newpb.fadeIn(400, () => {
+        strikeThroughDeclined( false );
+      });
+    }
+  };
+
+  socket.onopen = function() {
+    if ( window.timerId ) {
+      clearInterval( window.timerId );
+      window.timerId = null;
+    }
+  };
+
+  socket.onclose = function() {
+    if ( !window.timerId ) {
+      window.timerId = setInterval( function() {
+        socket = new WebSocket('{{ getenv("WEBSOCKET_SERVER") }}/ws/bnbc');
+        initSocket();
+      }, 1000);
+    }
+  };
+}
+
+function strikeThroughDeclined( newValue ) {
+  if ( newValue ) { allDeclinedAmounts.push( newValue  ); };
+  _.each( allDeclinedAmounts, (amt) => {
+    $('.amount-' + amt ).css('text-decoration', 'line-through');
+  });
+}
+
+function upBidBy(elem,percent) {
+  Helpers.axPost( "{{ url_for('api.proposals_bid') }}", {
+    "proposal_uuid": $(elem).data("proposal-id"),
+    "amount": $('#proposal-amount').data("amount"),
+    "percent": percent
+   }, (data) => {})
+}
+
+function obtainBids(bid_uuid) {
+    Helpers.axGet( "{{ url_for('api.previous_bids_for_bid',bid_uuid='') }}" + bid_uuid, (data) => {
+      if ( data.status == "ok" ) {
+        if ( data.data.length == 1 && data.data[0].pb_firstname == null) {
+          var tmpl = tmplt('no_previous_bids');
+          $('#no_previous_bids_container').html( tmpl() );
+        } else {
+          $('#no_previous_bids_container').remove();
+          var tmpl = tmplt('show_previous_bid');
+          _.each( data.data, function(pb) {
+            var newbid = $( tmpl({
+              amount: pb.previous_amount,
+              firstname: pb.pb_firstname,
+              surname: pb.pb_surname,
+              created_at: pb.pb_created_at,
+              ismine: ("{{ session['user_id'] }}" == pb.pb_uuid)
+            }));
+
+            newbid.hide();
+            $('#previous_bids_container').append( newbid );
+            newbid.fadeIn(200, () => {
+              if ( pb.previously_declined ) {
+                strikeThroughDeclined( pb.previous_amount );
+              }
+            });
+          });
+        }
+      }
+    });
+}
+
+{% endblock %}
+
+{% block js_onready %}
+initSocket();
+setTimeout( function() { obtainBids( '{{ proposal["bid_uuid"] }}' ) }, 500);
+
+var tmpl = tmplt('current_highest_bid');
+
+$('#current_highest_bid_container').html( tmpl( {
+  amount: "{{ proposal['amount'] }}",
+  firstname: "{{ proposal['bidder_firstname'] }}",
+  surname: "{{ proposal['bidder_surname'] }}",
+  created_at: "{{ proposal['last_bid_at'] }}",
+  ismine: ( "{{ proposal['bidder_uuid'] }}" == "{{ session['user_id'] }}")
+}));
+
+if ( '{{ proposal['declined'] }}' == 'True' ) {
+  strikeThroughDeclined( {{ proposal['amount'] }} );
+}
+
+setTimeout( function() {
+  $('#proposal-created-at').fadeOut( 400, () => {
+    $('#proposal-created-at').html(proposalCreatedAt.format('LLL')).fadeIn(400);
+  });
+},300);
+
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_no_previous_bids">
+  <!--
+  <div class="row mt-4">
+    <div class="offset-2 col-8 text-center text-info">
+      No Previous Bids
+    </div>
+  </div>
+  -->
+  </div>
+
+  <div id="_tmpl_show_previous_bid">
+  <!--
+  <div class="row mt-4" >
+    <div class="offset-2 col-8 offset-md-3 col-md-6 offset-lg-4 col-lg-4 text-center"
+       <% if ( ismine ) { %>
+       style="border: 4px solid black; background-color: #11994545;"
+       <% } else { %>
+       style="border: 4px solid black; background-color: #99114545;"
+       <% } %>
+       >
+      <div class="row">
+        <div class="col-12 text-center">
+          <span class="dollars amount-<%= amount %>"><%= amount %></span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center">
+          by <%= firstname %> <%= surname %>.
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center">
+          On <%= moment(created_at).format('LLL') %>
+        </div>
+      </div>
+    </div>
+  </div>
+  -->
+  </div>
+
+  <div id="_tmpl_current_highest_bid">
+  <!--
+  <div class="row mt-4" id="bid-amount-<%= amount %>">
+    <div class="offset-2 col-8 offset-md-3 col-md-6 offset-lg-4 col-lg-4 text-center"
+       <% if ( ismine ) { %>
+       style="border: 4px solid black; background-color: #11994545;"
+       <% } else { %>
+       style="border: 4px solid black; background-color: #99114545;"
+       <% } %>
+  >
+      <div class="row"
+           id="current_highest_bid"
+           data-amount="<%= amount %>"
+           data-firstname="<%= firstname %>"
+           data-surname="<%= surname %>"
+           data-created_at="<%= created_at %>"
+           data-ismine="<% if (ismine) { %>true<% } else { %>false<% } %>"
+           >
+        <div class="col-12 text-center h5">
+             Current highest bid:
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center h3">
+          <span id="proposal-amount"
+                class="dollars amount-<%= amount %>"
+                data-amount="<%= amount %>"
+                 ><%= amount %></span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center h5">
+          by <%= firstname %> <%= surname %>.
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 text-center">
+          On <%= moment(created_at).format('LLL') %>
+        </div>
+      </div>
+    </div>
+  </div>
+  -->
+  </div>
+
+{% endblock %}
+
+{% block body %}
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-md-2 col-md-8 offset-xl-3 col-xl-6 border border-dark">
+      <div class="row">
+        <div class="col">
+          <i class="h6">Auction:</i>
+        </div>
+      </div>
+      <div class="row">
+        <div class="text-center">
+          {{ proposal["text"] | safe }}
+        </div>
+      </div>
+
+      <div class="row mt-2">
+        <div class="col">
+          <i class="h6">Seller:</i>
+          {{ proposal["seller_details"] | safe }}
+        </div>
+      </div>
+      <div class="row mt-1">
+        <div class="col">
+          <i class="h6">Created:</i>
+          <span id="proposal-created-at">{{ proposal["proposal_created_at"] | safe }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="current_highest_bid_container">
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-1 col-sm-10 offset-lg-3 col-lg-6 text-center">
+      <div class="row">
+        <div class="col">
+          <a href="#"
+             type="button"
+             data-proposal-id="{{ proposal['uuid'] }}"
+             class="btn btn-outline-danger btn-lg"
+             onclick="upBidBy(this, 1); return false;"
+             >+1%</a>
+        </div>
+        <div class="col">
+         <a href="#"
+            type="button"
+            data-proposal-id="{{ proposal['uuid'] }}"
+            class="btn btn-outline-success btn-lg"
+            onclick="upBidBy(this, 5); return false;"
+           >+5%</a>
+        </div>
+        <div class="col">
+         <a href="#"
+            type="button"
+            data-proposal-id="{{ proposal['uuid'] }}"
+            class="btn btn-outline-primary btn-lg"
+            onclick="upBidBy(this, 10); return false;"
+           >+10%</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <hr>
+  <div class="row mt-4">
+    <div class="offset-2 col-8 text-center">
+      Previous Bids
+    </div>
+  </div>
+
+  <div id="no_previous_bids_container" class="mt-4">
+  </div>
+  <div id="previous_bids_container" class="mt-4">
+  </div>
+
+{% endblock %}

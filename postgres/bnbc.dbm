@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+         Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.9.3" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="9"
+	 default-schema="public" default-owner="postgres">
+<database name="public" is-template="false" allow-conns="true" append-at-eod="true" prepend-at-bod="true">
+	<appended-sql><![CDATA[
+
+]]></appended-sql>
+	<prepended-sql><![CDATA[create extension if not exists "uuid-ossp" WITH SCHEMA public;
+
+]]></prepended-sql>
+</database>
+
+<schema name="public" layer="0" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<table name="auctions" layer="0" collapse-mode="2" max-obj-count="19" z-value="0">
+	<schema name="public"/>
+	<position x="1100" y="200"/>
+	<column name="id" not-null="true">
+		<type name="serial" length="1"/>
+	</column>
+	<column name="uuid" not-null="true" default-value="uuid_generate_v4()">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="text" not-null="true">
+		<type name="text" length="1"/>
+	</column>
+	<column name="title">
+		<type name="varchar" length="1024"/>
+	</column>
+	<column name="seller_id">
+		<type name="integer" length="0"/>
+		<comment><![CDATA[The user id of the seller which may initially be empty]]></comment>
+	</column>
+	<column name="approved_by">
+		<type name="varchar" length="1024"/>
+		<comment><![CDATA[TODO remove the default value once logic is in place]]></comment>
+	</column>
+	<column name="is_approved" default-value="false">
+		<type name="boolean" length="0"/>
+		<comment><![CDATA[TODO remove the default value of true once logic is in place]]></comment>
+	</column>
+	<column name="is_banned" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="is_accepted" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="banned_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="accepted_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="approved_at">
+		<type name="timestamp" length="0"/>
+		<comment><![CDATA[TODO remove the default once the logic is in place]]></comment>
+	</column>
+	<column name="created_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="openai_rating">
+		<type name="jsonb" length="0"/>
+	</column>
+	<constraint name="desires_pk" type="pk-constr" table="public.auctions">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="id_users" index="15"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="users_fk" index="1"/>
+	</customidxs>
+</table>
+
+<table name="bids" layer="0" collapse-mode="2" max-obj-count="9" z-value="0">
+	<schema name="public"/>
+	<position x="280" y="260"/>
+	<column name="id" not-null="true">
+		<type name="serial" length="1"/>
+	</column>
+	<column name="amount" not-null="true">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="uuid" not-null="true" default-value="uuid_generate_v4()">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="was_declined" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="bids_pk" type="pk-constr" table="public.bids">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="id_users" index="6"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="users_fk" index="1"/>
+	</customidxs>
+</table>
+
+<table name="users" layer="0" collapse-mode="2" max-obj-count="19" z-value="0">
+	<schema name="public"/>
+	<position x="660" y="800"/>
+	<column name="id" not-null="true">
+		<type name="serial" length="1"/>
+	</column>
+	<column name="uuid" not-null="true" default-value="uuid_generate_v4()">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="firstname" not-null="true">
+		<type name="varchar" length="1024"/>
+	</column>
+	<column name="surname" not-null="true">
+		<type name="varchar" length="1024"/>
+	</column>
+	<column name="username">
+		<type name="varchar" length="1024"/>
+	</column>
+	<column name="email" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="is_verified" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="is_banned" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="is_deleted" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="was_created_by_auction" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="verified_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="banned_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="deleted_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="lastlogin_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="users_pk" type="pk-constr" table="public.users">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="user_email_unique" type="uq-constr" table="public.users">
+		<columns names="email" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<relationship name="users_has_many_bids" type="rel1n" layer="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#b5ee38"
+	 src-table="public.users"
+	 dst-table="public.bids"
+	 src-required="true" dst-required="false"/>
+
+<function name="amount_larger_on_update_and_insert_previous_bids"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="1">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="trigger" length="0"/>
+	</return-type>
+	<definition><![CDATA[
+BEGIN
+	if NEW.amount > OLD.amount  THEN
+       NEW.updated_at = NOW();
+		NEW.was_declined = false;
+      insert into previous_bids(id_auctions, id_users, amount, was_declined) values( OLD.id_auctions,OLD.id_users,OLD.amount, OLD.was_declined);
+    else
+	   NEW.amount = OLD.amount;
+	  NEW.id_users = OLD.id_users;
+     NEW.updated_at = OLD.updated_at;
+   end if;
+   return NEW;
+END;
+]]></definition>
+</function>
+
+<trigger name="ensure_amount_is_higher_on_update_and_insert_previous_bids" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="false" del-event="false" upd-event="true" trunc-event="false"
+	 table="public.bids">
+		<function signature="public.amount_larger_on_update_and_insert_previous_bids()"/>
+</trigger>
+
+<function name="update_updated_at_trigger"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="1">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="trigger" length="0"/>
+	</return-type>
+	<definition><![CDATA[BEGIN
+	NEW.updated_at := NOW();
+   return NEW;
+END;]]></definition>
+</function>
+
+<trigger name="update_updated_at_users" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="false" del-event="false" upd-event="true" trunc-event="false"
+	 table="public.users">
+		<function signature="public.update_updated_at_trigger()"/>
+</trigger>
+
+<trigger name="update_updated_at_on_auctions" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="false" del-event="false" upd-event="true" trunc-event="false"
+	 table="public.auctions">
+		<function signature="public.update_updated_at_trigger()"/>
+</trigger>
+
+<extension name="uuid-ossp" sql-disabled="true">
+	<schema name="public"/>
+	<prepended-sql><![CDATA[create extension if not exist "uuid-ossp";
+]]></prepended-sql>
+</extension>
+
+<table name="previous_bids" layer="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="public"/>
+	<position x="280" y="600"/>
+	<column name="id_auctions" not-null="true">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="id_users" not-null="true">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="amount" not-null="true">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="NOW()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="was_declined" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+</table>
+
+<function name="lower_case_email"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="1">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="trigger" length="0"/>
+	</return-type>
+	<definition><![CDATA[BEGIN
+   NEW.email = LOWER(NEW.email);
+   return NEW;
+END;
+]]></definition>
+</function>
+
+<trigger name="lower_email_on_users" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="true" del-event="false" upd-event="true" trunc-event="false"
+	 table="public.users">
+		<function signature="public.lower_case_email()"/>
+</trigger>
+
+<table name="user_verification" layer="0" collapse-mode="2" max-obj-count="4" z-value="0">
+	<schema name="public"/>
+	<comment><![CDATA[This table is only used for people who register on the site, hence the token expires within an hour.]]></comment>
+	<position x="1120" y="820"/>
+	<column name="user_uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="code" not-null="true">
+		<type name="varchar" length="36"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="email_sent_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="user_uuid_unique_on_user_verification" type="uq-constr" table="public.user_verification">
+		<columns names="user_uuid" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<function name="send_one_email_per_user"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="1">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="trigger" length="0"/>
+	</return-type>
+	<definition><![CDATA[BEGIN
+  if NEW.email_sent_at is not null then
+     if OLD.email_sent_at is null then
+		RETURN NEW;
+     else
+         if new.email_sent_at > (old.email_sent_at +  '10 minutes'::interval) then
+           return NEW;
+         else
+               raise exception 'spamming email';
+         end if;
+     end if;
+  end if;
+  RETURN NEW;
+END;
+]]></definition>
+</function>
+
+<trigger name="no_spammy_emails" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="false" del-event="false" upd-event="true" trunc-event="false"
+	 table="public.user_verification">
+		<function signature="public.send_one_email_per_user()"/>
+		<columns names="email_sent_at"/>
+</trigger>
+
+<function name="generate_tagged_uuid"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="0">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="varchar" length="36"/>
+	</return-type>
+	<parameter name="inchar" in="true">
+		<type name="bpchar" length="10"/>
+	</parameter>
+	<parameter name="inoutuuid" out="true">
+		<type name="varchar" length="0"/>
+	</parameter>
+	<definition><![CDATA[BEGIN
+	inoutuuid := replace( uuid_generate_v4()::varchar, '-', inchar );
+END
+;
+]]></definition>
+</function>
+
+<table name="user_login_codes" layer="0" collapse-mode="2" max-obj-count="4" z-value="0">
+	<schema name="public"/>
+	<comment><![CDATA[These are the codes for login for verified emails, so the code expires only after 24h and can be resent.]]></comment>
+	<position x="1120" y="1020"/>
+	<column name="user_uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="code">
+		<type name="varchar" length="36"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="email_sent_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="user_uuid_unique_on_user_login_codes" type="uq-constr" table="public.user_login_codes">
+		<columns names="user_uuid" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<function name="send_one_email_per_user_cp"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="1">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="trigger" length="0"/>
+	</return-type>
+	<definition><![CDATA[BEGIN
+  if NEW.email_sent_at is not null then
+     if OLD.email_sent_at is null then
+		RETURN NEW;
+     else
+         if new.email_sent_at > (old.email_sent_at +  '10 minutes'::interval) then
+           return NEW;
+         else
+               raise exception 'spamming email';
+         end if;
+     end if;
+  end if;
+  RETURN NEW;
+END;
+]]></definition>
+</function>
+
+<table name="unknown_sellers" layer="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<comment><![CDATA[TODO do something here]]></comment>
+	<position x="200" y="780"/>
+	<column name="email" not-null="true">
+		<type name="varchar" length="1024"/>
+	</column>
+	<constraint name="unique_email_in_unknown_seller" type="uq-constr" table="public.unknown_sellers">
+		<columns names="email" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<function name="generate_login_code"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="1">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="trigger" length="0"/>
+	</return-type>
+	<definition><![CDATA[BEGIN
+	NEW.code := generate_tagged_uuid('l');
+   return NEW;
+END;]]></definition>
+</function>
+
+<function name="generate_verification_code"
+		window-func="false"
+		returns-setof="false"
+		behavior-type="CALLED ON NULL INPUT"
+		function-type="VOLATILE"
+		security-type="SECURITY INVOKER"
+		execution-cost="1"
+		row-amount="1">
+	<schema name="public"/>
+	<language name="plpgsql"/>
+	<return-type>
+	<type name="trigger" length="0"/>
+	</return-type>
+	<definition><![CDATA[BEGIN
+	NEW.code := generate_tagged_uuid('v');
+   return NEW;
+END;]]></definition>
+</function>
+
+<trigger name="set_verification_code_before_insert" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="true" del-event="false" upd-event="false" trunc-event="false"
+	 table="public.user_verification">
+		<function signature="public.generate_verification_code()"/>
+</trigger>
+
+<trigger name="set_login_code_before_insert" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="true" del-event="false" upd-event="false" trunc-event="false"
+	 table="public.user_login_codes">
+		<function signature="public.generate_login_code()"/>
+</trigger>
+
+<table name="dont_send_me_emails" layer="0" collapse-mode="2" max-obj-count="3" z-value="0">
+	<schema name="public"/>
+	<position x="160" y="960"/>
+	<column name="email" not-null="true">
+		<type name="varchar" length="1024"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="NOW()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at" not-null="true" default-value="NOW()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="unique_email_in_dont_send_me_emails" type="uq-constr" table="public.dont_send_me_emails">
+		<columns names="email" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<index name="index_on_email" table="public.dont_send_me_emails"
+	 concurrent="false" unique="false" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="email"/>
+		</idxelement>
+</index>
+
+<relationship name="users_has_many_auctions" type="rel1n" layer="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#6cafc4"
+	 src-table="public.users"
+	 dst-table="public.auctions"
+	 src-required="true" dst-required="false"/>
+
+<relationship name="auctions_has_many_bids" type="rel1n" layer="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#cb530c"
+	 src-table="public.auctions"
+	 dst-table="public.bids"
+	 src-required="true" dst-required="false"/>
+
+<trigger name="update_updated_at_dont_send_me_emails" firing-type="BEFORE" per-line="true" constraint="false"
+	 ins-event="false" del-event="false" upd-event="true" trunc-event="false"
+	 table="public.dont_send_me_emails">
+		<function signature="public.update_updated_at_trigger()"/>
+</trigger>
+
+</dbmodel>

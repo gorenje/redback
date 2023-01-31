@@ -1,0 +1,282 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC AUCTIONS</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+      #joblisting {
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: 10px;
+      }
+{% endblock %}
+
+{% block js_globals %}
+var socket = new WebSocket('{{ getenv("WEBSOCKET_SERVER") }}/ws/bnbc');
+var button_tmpl = null;
+var buttons_when_accepted_tmpl = null;
+var buttons_when_seller_tmpl = null;
+var declinedAmountsByProposal = {};
+{% endblock %}
+
+
+{% block js_functions %}
+function upBidBy(elem,percent) {
+  Helpers.axPost( "{{ url_for('api.proposals_bid') }}", {
+    "proposal_uuid": $(elem).data("proposal-id"),
+    "amount": $('#proposal-'+$(elem).data("proposal-id")).find(".bid-amount").data("amount"),
+    "percent": percent
+   }, (data) => {
+   })
+}
+
+function declineBidAt(elem) {
+  Helpers.axPost( "{{ url_for('api.proposals_decline') }}", {
+    "proposal_uuid": $(elem).data("proposal-id"),
+    "amount": $('#proposal-'+$(elem).data("proposal-id")).find(".bid-amount").data("amount"),
+  }, (resp) => {
+    if ( resp.status == "ok" ) {
+      $("#buttons").fadeOut(500);
+    }
+  })
+}
+
+function acceptBidAt(elem) {
+  Helpers.axPost( "{{ url_for('api.proposals_accept') }}", {
+    "proposal_uuid": $(elem).data("proposal-id"),
+    "amount": $('#proposal-'+$(elem).data("proposal-id")).find(".bid-amount").data("amount"),
+  }, (resp) => {
+    if ( resp.status == "ok" ) {
+      $("#buttons").fadeOut(500);
+    }
+  })
+}
+
+function strikeThroughDeclinedBids( proposal_uuid, amount ) {
+  if ( amount ) { declinedAmountsByProposal[proposal_uuid] = amount };
+  _.each( declinedAmountsByProposal, (amount,uuid) => {
+    $('#proposal-'+uuid).find(".amount-"+amount).css('text-decoration','line-through');
+    $('#proposal-'+uuid).find(".seller-buttons").fadeOut(400);
+  });
+}
+function strikeThroughDeclined( newValue ) {
+  if ( newValue ) { allDeclinedAmounts.push( newValue  ); };
+  _.each( allDeclinedAmounts, (amt) => {
+    $('.amount-' + amt ).css('text-decoration', 'line-through');
+  });
+}
+
+function retrieveInitProposals() {
+    Helpers.axGet( "{{ url_for('api.proposals_all') }}", function(resp) {
+    _.each( resp.data.data, function(dr) { add_object_to_list(dr) } );
+  });
+}
+
+function initSocket() {
+      socket.onmessage = function (msg) {
+        var dt = JSON.parse(msg.data);
+        if ( dt.type == "new_auction" ) {
+          add_object_to_list(dt.data);
+        }
+
+        if ( dt.type == "auction_creator" ) {
+          dt = dt.data;
+          $('#proposal-'+dt.uuid).find(".creator").html(dt.name);
+        }
+
+        if ( dt.type == "bid_accepted" ) {
+          dt = dt.data;
+          var html = buttons_when_accepted_tmpl({ proposal_id: dt.proposal_uuid });
+          $('#proposal-'+dt.proposal_uuid).find(".bid-actions").html(html);
+        }
+
+        if ( dt.type == "bid_declined" ) {
+          dt = dt.data;
+          $('#proposal-'+dt.proposal_uuid).find(".amount-"+dt.amount).css('text-decoration','line-through');
+          $('#proposal-'+dt.proposal_uuid).find(".seller-buttons").fadeOut(400);
+        }
+
+        if ( dt.type == "highest_bid" ) {
+          dt = dt.data;
+
+          if ( $('#proposal-'+dt.proposal_uuid).find(".bid-amount").data("amount") == dt.amount ) { return ; }
+
+          $('#proposal-'+dt.proposal_uuid).find(".bid-amount").fadeOut(500, () => {
+            $('#proposal-'+dt.proposal_uuid).find(".bid-amount").html(
+              "<span class='dollars amount-"+dt.amount+"'>"+dt.amount+"</span>"
+            ).data("amount",dt.amount).fadeIn(500, () => {
+              if ( dt.declined ) {
+                strikeThroughDeclinedBids( dt.proposal_uuid, dt.amount );
+              }
+            });
+          });
+
+          $('#proposal-'+dt.proposal_uuid).find(".bid-user").fadeOut(300, () => {
+            $('#proposal-'+dt.proposal_uuid).find(".bid-user").html(dt.bidder_firstname + " " + dt.bidder_surname + ".").fadeIn(300);
+          });
+
+          if ( dt.bidder_uuid == "{{ session['user_id']}}" ) {
+            $('#proposal-'+dt.proposal_uuid).find(".seller-buttons").fadeOut(400);
+          } else {
+            $('#proposal-'+dt.proposal_uuid).find(".seller-buttons").fadeIn(400);
+          }
+        }
+      };
+
+      socket.onopen = function() {
+        if ( window.timerId ) {
+          clearInterval( window.timerId );
+          window.timerId = null;
+        }
+      };
+      socket.onclose = function() {
+        if ( !window.timerId ) {
+          window.timerId = setInterval( function() {
+            socket = new WebSocket('{{ getenv("WEBSOCKET_SERVER") }}/ws/bnbc');
+            initSocket();
+          }, 1000);
+        }
+      };
+
+    }
+
+    function add_object_to_list(data) {
+      var trstr = "<tr data-id='" + data.uuid + "' id='proposal-"+data.uuid+"'>"
+
+      trstr += "<td>" + tmplt("proposal_description")({ proposal: data }) + "</td>"
+
+      trstr += "<td class='bid-user'><img src='/static/images/loader.svg'/></td>";
+
+      trstr += "<td class='bid-amount'><img src='/static/images/loader.svg'/></td>";
+      trstr += "<td class='bid-actions'>";
+      if ( data.is_accepted ) {
+        trstr += buttons_when_accepted_tmpl({ proposal_id: data.uuid });
+      } else {
+        if ( data.seller_uuid == "{{ session['user_id']}}" ) {
+          trstr += buttons_when_seller_tmpl({ proposal_id: data.uuid });
+        } else {
+          trstr += button_tmpl({ proposal_id: data.uuid });
+        }
+      }
+      trstr += "</td>";
+
+      socket.send( JSON.stringify( {
+        type: "get_creator_for_proposal",
+        proposal_uuid: data.uuid
+      }));
+
+      socket.send( JSON.stringify( {
+        type: "get_highest_bid",
+        proposal_uuid: data.uuid
+      }));
+
+      trstr += "</tr>"
+      $('#joblisting').find('tbody').prepend(trstr)
+    }
+{% endblock %}
+
+{% block js_onready %}
+button_tmpl = tmplt('proposal_buttons');
+buttons_when_accepted_tmpl = tmplt('proposal_buttons_when_accepted');
+buttons_when_seller_tmpl = tmplt('proposal_buttons_when_seller');
+
+initSocket();
+setTimeout(retrieveInitProposals, 500);
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_proposal_description">
+  <!--
+    <a href="{{ url_for( 'proposal_view',auction_uuid='' ) }}<%= proposal.uuid %>">
+       <%= proposal.text %>
+    </a>
+  -->
+  </div>
+
+  <div id="_tmpl_proposal_buttons_when_accepted">
+  <!--
+     <div class="row">
+       <div class="col">
+         <i class="far fa-check"></i>
+       </div>
+     </div>
+  -->
+  </div>
+
+  <div id="_tmpl_proposal_buttons_when_seller">
+  <!--
+     <div class="seller-buttons row vstack gap-2">
+       <div class="col">
+         <a href="#"
+            data-proposal-id="<%= proposal_id %>"
+            class="btn btn-success btn-sm"
+            type="button"
+            onclick="acceptBidAt(this); return false;"
+           >Accept</a>
+       </div>
+       <div class="col">
+         <a href="#"
+            data-proposal-id="<%= proposal_id %>"
+            class="btn btn-danger btn-sm"
+            type="button"
+            onclick="declineBidAt(this); return false;"
+           >Decline</a>
+       </div>
+     </div>
+   -->
+  </div>
+
+  <div id="_tmpl_proposal_buttons">
+  <!--
+     <div class="row vstack hstack-sm gap-2">
+       <div class="col">
+         <a href="#"
+            data-proposal-id="<%= proposal_id %>"
+            class="btn btn-outline-danger btn-sm"
+            type="button"
+            onclick="upBidBy(this, 1); return false;"
+           >+1%</a>
+       </div>
+       <div class="col">
+         <a href="#"
+            data-proposal-id="<%= proposal_id %>"
+            class="btn btn-outline-success btn-sm"
+            type="button"
+            onclick="upBidBy(this, 5); return false;"
+           >+5%</a>
+       </div>
+       <div class="col">
+         <a href="#"
+            data-proposal-id="<%= proposal_id %>"
+            class="btn btn-outline-primary btn-sm"
+            type="button"
+            onclick="upBidBy(this, 10); return false;"
+           >+10%</a>
+       </div>
+     </div>
+  -->
+  </div>
+{% endblock %}
+
+
+{% block body %}
+  <div class="row">
+    <div id="joblisting" class="col-12 offset-md-1 col-md-10 offset-lg-2 col-lg-8 mt-4">
+      <table class="table table-striped">
+        <thead>
+          <th >Auction</th>
+          <th colspan=2>Top Bidder</th>
+          <th ></th>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock %}

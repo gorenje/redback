@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC DONT SPAM ME</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+{% endblock %}
+
+{% block js_functions %}
+function doSearch() {
+  var email = $('#email').val().trim();
+  var data = $('#data').val().trim();
+
+  $('#loader').show();
+  $('#form-field-container').html("");
+
+  Helpers.axPost( "{{ url_for('api.user_dont_spam_me') }}", {
+    "email": email,
+    "data": data
+    }, (data) => {
+    console.log(data)
+    var tmpl = tmplt('oooops');
+
+    if ( data.status == "ok" ) { tmpl = tmplt('ok'); }
+    if ( data.status == "email_invalid" ) { tmpl = tmplt('email_invalid');}
+    if ( data.status == "failed" ) { tmpl = tmplt('email_error'); }
+    if ( data.status == "error" ) {  tmpl = tmplt('email_error');}
+    if ( data.status == "does_not_exist" ) { tmpl = tmplt('email_unknown_signup'); }
+    if ( data.status == "email_not_verified" ) { tmpl = tmplt('email_not_verified'); }
+    if ( data.status == "email_banned" ) { tmpl = tmplt('email_banned'); }
+
+    $('#form-field-container').html( tmpl({ msg: data.msg, email: email, status: data.status}) );
+    $('#loader').hide();
+  });
+}
+
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_ok">
+    <!--
+      <div class="row mt-4" style="overflow-y: hidden; overflow-x: hidden;">
+        <div class="offset-2 col-8 text-center">
+          Success! You will no longer recieve any emails from us. If you wish to
+          reconsider this, kindly contact our support.
+        </div>
+      </div>
+     -->
+  </div>
+
+  <div id="_tmpl_oooops">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, oooooops. Unhandled status '<%= status %>'.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_vercode_error">
+  <!--
+    <div class="offset-2 col-8 text-center">
+      Sorry, <%= ver_code %>: error <%= msg %>. Perhaps <a href="{{ url_for('login') }}">try again</a>.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_error">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, error <%= msg %>.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_unknown_signup">
+  <!--
+    <div class="offset-2 col-8 text-center">
+      Sorry, your Email <%= email %> is unkonwn to us, <a href="{{ url_for('register') }}">sign up!</a>
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_invalid">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, your Email <%= email %> is invalid.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_banned">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, your Email <%= email %> is banned, contact <a href="mailto:support@bidnbuy.club">support</a>.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_not_verified">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, your Email <%= email %> is not yet verified, <a href="{{ url_for('resend_verification_code') }}">try resending your verification code</a>.
+    </div>
+  -->
+  </div>
+{% endblock %}
+
+
+{% block body %}
+  <div class='row mt-4'>
+    <div class='col-12'>
+      <div class="container-fluid"
+           style="overflow-y: hidden; overflow-x: auto;">
+        <div class="row flex-row flex-nowrap" >
+          <img id=loader
+               width=30
+               height=30
+               style='display: none;'
+               src='/static/images/loader.svg'/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8">
+      {{ read_md_file('dont_spam_me') | markdown }}
+    </div>
+  </div>
+
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8 offset-md-3 col-md-6 text-center">
+      <form autocomplete="off" onsubmit="doSearch(); return false;">
+          <input type="hidden"
+                 value="{{ data }}"
+                 id="data"></input>
+        <div class="row"
+             id="form-field-container"
+             style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="text"
+                 autofocus
+                 id="email"
+                 placeholder="Confirm Email"></input>
+
+          <div class="row mt-4">
+            <div class="col-12 text-center">
+              <button
+                type="button"
+                onclick="doSearch(); return false;"
+                >Don't Spam Me!</button>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+{% endblock %}

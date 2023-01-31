@@ -1,0 +1,28 @@
+FROM python:3.9.9
+
+RUN apt-get update
+RUN apt-get install -y postgresql-client
+
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+
+COPY .env.webapp .env
+EXPOSE 8082
+
+ARG NB_USER=bnbc
+ARG NB_UID=1000
+ENV USER ${NB_USER}
+ENV NB_UID ${NB_UID}
+ENV HOME /home/${NB_USER}
+
+RUN addgroup --gid ${NB_UID} ${NB_USER}
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    --gid ${NB_UID} \
+    ${NB_USER}
+
+USER ${NB_USER}
+
+CMD python3 /webapp/app.py -d -r -p 8082

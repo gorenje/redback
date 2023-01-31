@@ -1,0 +1,4 @@
+.env.webapp
+.env.nodered
+*__pycache__*
+._*

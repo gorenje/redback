@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC TEST LOGIN</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_error_msg">
+    <!--
+        Error: <%= msg %>
+    -->
+  </div>
+{% endblock %}
+
+{% block js_functions %}
+function doSearch() {
+
+  if ( !$('#aggree_to_tas').is(":checked") ) {
+    alert("Please aggree to Terms & Services first");
+    return;
+  }
+
+  $('#loader').show();
+  Helpers.axPost( "{{ url_for('api.user_register') }}", {
+    "firstname": $('#firstname').val().trim(),
+    "surname": $('#surname').val().trim(),
+    "email": $('#email').val().trim(),
+  }, (data) => {
+    if ( data.status == "ok" ) {
+      Helpers.axPost( "{{ url_for('api.send_verify_email') }}", {
+        "user_uuid": data.user_uuid
+      }, (data) => {
+        if ( data.status == "ok" ) {
+          window.location = "{{ url_for('verify') }}";
+        } else {
+          $('#error-msg-container').html( tmplt('error_msg')({ msg: data.msg  }));
+          $('#loader').hide();
+        }
+      })
+  } else {
+      $('#error-msg-container').html( tmplt('error_msg')({ msg: data.msg  }) );
+      $('#loader').hide();
+    }
+  })
+}
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block body %}
+
+  <div class='row mt-4'>
+    <div class='col text-center'>
+      <div class="container-fluid" id='playlist-links'
+           style="overflow-y: hidden; overflow-x: auto;">
+        <div class="row flex-row flex-nowrap" >
+          <img id=loader
+               width=30
+               height=30
+               style='display: none;'
+               src='/static/images/loader.svg'/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8">
+      {{ read_md_file('register') | markdown }}
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-3 col-6 text-center" id="error-msg-container">
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8 offset-md-3 col-md-6 text-center">
+      <form autocomplete="off" onsubmit="doSearch(); return false;">
+        <div class="row"style="overflow-y: hidden; overflow-x: hidden;">
+
+          <input autocomplete="true"
+                 type="text"
+                 id="email"
+                 autofocus
+                 placeholder="Email"></input>
+        </div>
+        <div class="row mt-2"style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="text"
+                 id="firstname"
+                 placeholder="Firstname"></input>
+        </div>
+        <div class="row mt-2"style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="text"
+                 id="surname"
+                 placeholder="Surname"></input>
+        </div>
+
+        <div class="row mt-4 text-start">
+          <div class="form-check form-switch">
+            <label class="form-check-label"
+                   for="aggree_to_tas"
+                   >You agree to the <a href="{{ url_for('eula') }}">terms</a> and have read the <a href="{{ url_for('faqs') }}">FAQs</a></label>
+            <input class="form-check-input"
+                   type="checkbox"
+                   role="switch"
+                   id="aggree_to_tas"
+                   value=""></input>
+          </div>
+
+      </form>
+    </div>
+  </div>
+
+
+
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <button
+        class="btn btn-success btn-lg"
+        type="button"
+        onclick="doSearch(); return false;"
+        >Sign Me Up!</button>
+    </div>
+  </div>
+
+
+{% endblock %}

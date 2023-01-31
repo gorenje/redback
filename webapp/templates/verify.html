@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC TEST LOGIN</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_error_msg">
+    <!--
+        Error: <%= msg %>
+    -->
+  </div>
+{% endblock %}
+
+
+{% block js_globals %}
+{% endblock %}
+
+{% block js_functions %}
+ function doSearch() {
+   $('#loader').show()
+   Helpers.axPost( "{{ url_for('api.user_login_by_verifying_email') }}", {
+     "email": $('#email').val().trim(),
+     "ver_code": $('#ver_code').val().trim(),
+   }, (data) => {
+     if ( data.status == "ok" ) {
+       window.location = "{{ url_for('proposals') }}";
+     } else {
+       $('#loader').hide()
+       $('#error-msg-container').html( tmplt('error_msg')({ msg: data.msg  }) );
+     }
+   })
+ }
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block body %}
+  <div class='row mt-4'>
+    <div class='col-12'>
+      <div class="container-fluid" id='playlist-links'
+           style="overflow-y: hidden; overflow-x: auto;">
+        <div class="row flex-row flex-nowrap" >
+          <img id=loader
+               width=30
+               height=30
+               style='display: none;'
+               src='/static/images/loader.svg'/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-3 col-6 text-center" id="error-msg-container">
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8 offset-md-3 col-md-6 text-center">
+      <form autocomplete="off" onsubmit="doSearch(); return false;">
+        <div class="row"style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="text"
+                 id="email"
+                 {% if session.get("email") %}
+                 value="{{ session.get('email') }}"
+                 {% else %}
+                 autofocus
+                 {% endif %}
+                 placeholder="Email"></input>
+        </div>
+        <div class="row mt-2"style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="text"
+                 autofocus
+                 id="ver_code"
+                 placeholder="Verification code"></input>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <button
+        type="button"
+        onclick="doSearch(); return false;"
+        >Verify Email</button>
+    </div>
+  </div>
+
+{% endblock %}

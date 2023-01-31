@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC NOT APPROVED</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+{% endblock %}
+
+{% block js_functions %}
+function reload() {
+  window.location.reload();
+};
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_XXXXXX">
+  <!--
+  -->
+  </div>
+{% endblock %}
+
+{% block body %}
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8">
+      This auction has not yet been approved. If you believe this to
+      be a mistake, the <a href="mailto:approval@support.bidnbuy.club?subject=Approval%20of%20{{ uuid }}">email our support</a> or <a href="#" onclick="reload();">reload the page</a>.
+    </div>
+  </div>
+{% endblock %}

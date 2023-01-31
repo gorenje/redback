@@ -1,0 +1,27 @@
+{#
+
+Always remember that there isn't a *-xs-* infix and the default, e.g. col-6
+is applied to *-xs-* screens, so all other infixes change that.
+
+e.g.
+
+col-6 col-sm-8 col-xl-10
+
+will be a column six for xs, but a col-8 for sm, md, and lg
+and a col-10 for xl and xxl
+
+i.e. the base stays until something changes it.
+
+that's how bootstrap works.
+
+#}
+<div class="row">
+  <div class="col-12" style="background-color: red;">
+    <div class="d-block d-sm-none">xs</div>
+    <div class="d-none d-sm-block d-md-none">sm</div>
+    <div class="d-none d-md-block d-lg-none">md</div>
+    <div class="d-none d-lg-block d-xl-none">lg</div>
+    <div class="d-none d-xl-block d-xxl-none">xl</div>
+    <div class="d-none d-xxl-block">xxl</div>
+  </div>
+</div>

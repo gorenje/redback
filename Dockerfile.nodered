@@ -1,0 +1,11 @@
+FROM nodered/node-red:3.0.2
+
+USER root
+
+COPY ./node-red/package.json .
+
+RUN npm install
+
+RUN cp -R node_modules prod_node_modules
+
+USER node-red

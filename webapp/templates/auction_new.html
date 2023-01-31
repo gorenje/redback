@@ -1,0 +1,232 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC NEW AUCTION</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+{% endblock %}
+
+{% block js_functions %}
+function doSellerThing(elem) {
+  if ( $(elem).is(":checked") ) {
+    $('#seller_email_container').fadeIn(500);
+    $('#title-text').fadeOut(400, () => {
+      $('#title-text').html(tmplt("new_desire_text")()).fadeIn(200);
+    });
+  } else {
+    $('#seller_email_container').fadeOut(500);
+    $('#title-text').fadeOut(400, () => {
+      $('#title-text').html(tmplt("new_offer_text")()).fadeIn(200);
+    });
+  }
+}
+
+function doSearch() {
+  $('#message_container').html( tmplt('loader')() ).fadeIn(100);
+  $('#submit-button').attr("disabled","disabled");
+
+  if ( !parseInt($('#amount').val()) || parseInt($('#amount').val()) <= 0 ) {
+    $('#message_container').fadeOut(200, () => {
+      $('#submit-button').removeAttr("disabled");
+
+      var tmpl = tmplt('show_status');
+      $('#message_container').html( tmpl({ dt: { status: "error",
+                                                 msg: "amount invalid"
+                                               }})).fadeIn(400);
+    });
+    return;
+  }
+
+  if ( $('#description').val().trim() == "" ) {
+    $('#message_container').fadeOut(200, () => {
+      $('#submit-button').removeAttr("disabled");
+
+      var tmpl = tmplt('show_status');
+      $('#message_container').html( tmpl({ dt: { status: "error",
+                                                 msg: "description empty"
+                                               }})).fadeIn(400);
+    });
+    return;
+  }
+
+  Helpers.axPost( "{{ url_for('api.submit_new_proposal') }}", {
+    description:  $('#description').val(),
+    seller_email: $('#seller_email').val(),
+    amount:       parseInt($('#amount').val()),
+    iamseller:    !$('#iam_not_the_seller').is(":checked")
+  }, (data) => {
+    $('#submit-button').removeAttr("disabled");
+    if ( data.status == "ok" ) {
+      var tmpl = tmplt('show_offer_link');
+      if ( !data.data.iamseller ) {
+        var tmpl = tmplt('show_desire_link');
+      }
+
+      $('#message_container').fadeOut(300, () => {
+        $('#message_container').html( tmpl({ dt: data.data }) ).fadeIn(300, () => {
+          $('#message_container').fadeOut(3000, () => {
+            $('#message_container').html("").show();
+          });
+        });
+      });
+    } else {
+      var tmpl = tmplt('show_status');
+      $('#message_container').html( tmpl({ dt: data }) ).show();
+    }
+  });
+}
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_show_status">
+  <!--
+    <div class="offset-1 col-10 text-center">
+      <div class="row">
+        <div class="col-12">
+          <%= dt.status %>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <%= dt.msg %>
+        </div>
+      </div>
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_show_desire_link">
+  <!--
+    <div class="offset-1 col-10 text-center">
+      <div class="row">
+        <div class="col">
+          Your desire was created. All desires are first approved before
+          being shown. Link to <a href="{{ url_for( 'proposal_view',auction_uuid='' ) }}<%= dt.uuid %>">your desire</a>.
+        </div>
+      </div>
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_show_offer_link">
+  <!--
+    <div class="offset-1 col-10 text-center">
+      <div class="row">
+        <div class="col">
+          Your offer was created. All offers are first approved before being
+          shown. Link to <a href="{{ url_for( 'proposal_view',auction_uuid='' ) }}<%= dt.uuid %>">your offer</a>.
+        </div>
+      </div>
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_loader">
+  <!--
+  <div class='row mt-4'>
+    <div class='col'>
+      <div class="container-fluid"
+           style="overflow-y: hidden; overflow-x: auto;">
+        <div class="row flex-row flex-nowrap" >
+          <img id=loader
+               width=30
+               height=30
+               style='display: none;'
+               src='/static/images/loader.svg'/>
+        </div>
+      </div>
+    </div>
+  </div>
+  -->
+  </div>
+
+  <div id="_tmpl_new_desire_text">
+    <!--
+      {{ read_md_file('new_desire') | markdown }}
+    -->
+  </div>
+  <div id="_tmpl_new_offer_text">
+    <!--
+      {{ read_md_file('new_offer') | markdown }}
+    -->
+  </div>
+{% endblock %}
+
+{% block body %}
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8" id="title-text">
+      {{ read_md_file('new_offer') | markdown }}
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8 text-center">
+      <form autocomplete="off" onsubmit="doSearch(); return false;">
+
+        <div class="row mt-2" style="overflow-y: hidden; overflow-x: hidden;">
+          <textarea autocomplete="true"
+                    rows="6"
+                    type="textarea"
+                    id="description"
+                    placeholder="Description"></textarea>
+        </div>
+
+        <div class="row mt-2" style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="integer"
+                 id="amount"
+                 placeholder="Initial amount"></input>
+        </div>
+
+        <div class="row mt-4"
+             id="seller_email_container"
+             style="display: none;">
+          <input autocomplete="true"
+                 type="text"
+                 id="seller_email"
+                 placeholder="Seller Email (optional)"></input>
+        </div>
+
+        <div class="mt-4 text-start">
+          <div class="form-check form-switch">
+            <input class="form-check-input"
+                   type="checkbox"
+                   role="switch"
+                   onchange="doSellerThing(this); return false;"
+                   id="iam_not_the_seller"
+                   value=""></input>
+            <label class="form-check-label"
+                   for="iam_not_the_seller"
+                   >I'm buying</label>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row mt-4" id="message_container"></div>
+
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <button
+        class="btn btn-success btn-lg"
+        id="submit-button"
+        type="button"
+        onclick="doSearch(); return false;"
+        >Submit</button>
+    </div>
+  </div>
+
+{% endblock %}

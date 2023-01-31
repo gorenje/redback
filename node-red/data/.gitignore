@@ -1,0 +1,6 @@
+node_modules
+.npm
+*.backup
+package.json
+.config.*
+package-lock.json

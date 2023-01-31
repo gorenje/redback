@@ -1,0 +1,246 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC AUCTION PAGE</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore,moment" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+var proposalCreatedAt = moment('{{ proposal["proposal_created_at"] | safe }}');
+{% endblock %}
+
+{% block js_functions %}
+
+function upBidBy(elem,percent) {
+  Helpers.axPost( "{{ url_for('api.proposals_bid') }}", {
+    "proposal_uuid": $(elem).data("proposal-id"),
+    "amount": $('#proposal-amount').data("amount"),
+    "percent": percent
+   }, (data) => {})
+}
+
+function obtainBids(bid_uuid) {
+    Helpers.axGet( "{{ url_for('api.previous_bids_for_bid',bid_uuid='') }}" + bid_uuid, (data) => {
+      if ( data.status == "ok" ) {
+        if ( data.data.length == 1 && data.data[0].pb_firstname == null) {
+          var tmpl = tmplt('no_previous_bids');
+          $('#no_previous_bids_container').html( tmpl() );
+        } else {
+          $('#no_previous_bids_container').remove();
+          var tmpl = tmplt('show_previous_bid');
+          _.each( data.data, function(pb) {
+            var newbid = $( tmpl({
+              amount: pb.previous_amount,
+              firstname: pb.pb_firstname,
+              surname: pb.pb_surname,
+              created_at: pb.pb_created_at,
+              ismine: ("{{ session['user_id'] }}" == pb.pb_uuid)
+            }));
+            newbid.hide();
+            $('#previous_bids_container').append( newbid );
+            newbid.fadeIn(200);
+          });
+        }
+      }
+    });
+}
+
+{% endblock %}
+
+{% block js_onready %}
+setTimeout( function() { obtainBids( '{{ proposal["bid_uuid"] }}' ) }, 500);
+
+var tmpl = tmplt('current_highest_bid');
+
+$('#current_highest_bid_container').html( tmpl( {
+  amount: "{{ proposal['amount'] }}",
+  firstname: "{{ proposal['bidder_firstname'] }}",
+  surname: "{{ proposal['bidder_surname'] }}",
+  created_at: "{{ proposal['last_bid_at'] }}",
+  ismine: ( "{{ proposal['bidder_uuid'] }}" == "{{ session['user_id'] }}")
+}));
+
+setTimeout( function() {
+  $('#proposal-created-at').fadeOut( 400, () => {
+    $('#proposal-created-at').html(proposalCreatedAt.format('LLL')).fadeIn(400);
+  });
+},300);
+
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_no_previous_bids">
+  <!--
+  <div class="row mt-4">
+    <div class="offset-2 col-8 text-center text-info">
+      No Previous Bids
+    </div>
+  </div>
+  -->
+  </div>
+
+  <div id="_tmpl_show_previous_bid">
+  <!--
+  <div class="row mt-4" >
+    <div class="offset-2 col-8 offset-md-3 col-md-6 offset-lg-4 col-lg-4 text-center"
+       <% if ( ismine ) { %>
+       style="border: 4px solid black;"
+       <% } else { %>
+       style="border: 4px solid black;"
+       <% } %>
+       >
+      <div class="row">
+        <div class="col-12 text-center">
+          <span class=dollars><%= amount %></span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center">
+          by <%= firstname %> <%= surname %>.
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center">
+          On <%= moment(created_at).format('LLL') %>
+        </div>
+      </div>
+    </div>
+  </div>
+  -->
+  </div>
+
+  <div id="_tmpl_current_highest_bid">
+  <!--
+  <div class="row mt-4" id="bid-amount-<%= amount %>">
+  <div class="offset-2 col-8 offset-md-3 col-md-6 offset-lg-4 col-lg-4 text-center"
+       <% if ( ismine ) { %>
+       style="border: 4px solid black; background-color: #11994545;"
+       <% } else { %>
+       style="border: 4px solid black;"
+       <% } %>
+  >
+      <div class="row"
+           id="current_highest_bid"
+           data-amount="<%= amount %>"
+           data-firstname="<%= firstname %>"
+           data-surname="<%= surname %>"
+           data-created_at="<%= created_at %>"
+           data-ismine="<% if (ismine) { %>true<% } else { %>false<% } %>"
+           >
+       <% if ( ismine ) { %>
+        <div class="col-12 text-center h5">
+             The seller has accepted your proposal of
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center h3">
+          <span id="proposal-amount"
+                class="dollars"
+                data-amount="<%= amount %>"
+                 ><%= amount %></span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 text-center">
+          On <%= moment(created_at).format('LLL') %>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 text-center h5">
+          Congratulations!
+        </div>
+      </div>
+       <% } else { %>
+        <div class="col-12 text-center h5">
+             Auction accepted for
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center h3">
+          <span id="proposal-amount"
+                class="dollars"
+                data-amount="<%= amount %>"
+                 ><%= amount %></span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center h5">
+          bid made by <%= firstname %> <%= surname %>.
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 text-center">
+          On <%= moment(created_at).format('LLL') %>
+        </div>
+      </div>
+
+      <% } %>
+
+    </div>
+  </div>
+  -->
+  </div>
+
+{% endblock %}
+
+{% block body %}
+  <div class="row mt-4">
+    <div class="offset-1 col-10 h2 text-center text-success">
+      Auction has been accepted.
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-2 col-8 offset-md-2 col-md-8 offset-xl-3 col-xl-6 border border-dark">
+      <div class="row">
+        <div class="col">
+          <i class="h6">Auction:</i>
+        </div>
+      </div>
+      <div class="row">
+        <div class="text-center">
+          {{ proposal["text"] | safe }}
+        </div>
+      </div>
+
+      <div class="row mt-2">
+        <div class="col">
+          <i class="h6">Seller:</i>
+          {{ proposal["seller_details"] | safe }}
+        </div>
+      </div>
+
+      <div class="row mt-1">
+        <div class="col">
+          <i class="h6">Created:</i>
+          <span id="proposal-created-at">{{ proposal["proposal_created_at"] | safe }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="current_highest_bid_container">
+  </div>
+
+
+  <hr>
+  <div class="row mt-4">
+    <div class="offset-2 col-8 text-center">
+      Previous Bids
+    </div>
+  </div>
+
+  <div id="no_previous_bids_container" class="mt-4">
+  </div>
+  <div id="previous_bids_container" class="mt-4">
+  </div>
+{% endblock %}

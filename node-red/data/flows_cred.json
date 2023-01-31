@@ -1,0 +1,14 @@
+{
+    "82fcf7aa4a35258c": {
+        "password": "$(FASTMAIL_API)"
+    },
+    "4001998a87a4a8c6": {
+        "password": "$(FASTMAIL_API)"
+    },
+    "70dfedaf202734d4": {
+        "password": "$(FASTMAIL_API)"
+    },
+    "dbe49e4b98b2bb35": {
+        "password": "$(FASTMAIL_API)"
+    }
+}

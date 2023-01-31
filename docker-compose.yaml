@@ -1,0 +1,60 @@
+---
+version: '2.2'
+
+networks:
+  bnbc:
+
+volumes:
+  bnbc_postgres_db:
+
+services:
+  rednode-bnbc:
+    build:
+      context: ./
+      dockerfile: Dockerfile.nodered
+    env_file: .env.nodered
+    ports:
+      - "0.0.0.0:1880:1880"
+    networks:
+      - bnbc
+    volumes:
+      - ./node-red/data:/data
+
+  db-bnbc:
+    build:
+      context: ./
+      dockerfile: Dockerfile.initdb
+    cpu_count: 8
+    shm_size: 1GB
+    volumes:
+      - bnbc_postgres_db:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:8889:5432"
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - PG_WORK_MEM=256MB
+      - PG_MAINTENANCE_WORK_MEM=2GB
+    networks:
+      - bnbc
+
+  bnbc-redis:
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
+    cpu_count: 8
+    shm_size: 1GB
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - bnbc
+
+  bnbc-python:
+    build:
+      context: ./
+      dockerfile: Dockerfile.python
+    ports:
+      - "0.0.0.0:8082:8082"
+    volumes:
+      - ./webapp:/webapp
+    networks:
+      - bnbc

@@ -1,0 +1,24 @@
+{
+    "name": "node-red-project",
+    "description": "A Node-RED Project",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "node-red-contrib-postgresql": "~0.12.0",
+        "node-red-contrib-sqlbuilder": "~0.5.0",
+        "node-red-contrib-sqlstring": "~0.1.1",
+        "node-red-contrib-ui-clock": "~1.0.2",
+        "node-red-contrib-ui-digital-clock": "~1.0.0",
+        "node-red-contrib-ui-digital-display": "~1.0.3",
+        "node-red-contrib-ui-led": "~0.4.11",
+        "node-red-contrib-ui-level": "~0.1.46",
+        "node-red-contrib-ui-simple-level": "~1.0.0",
+        "node-red-dashboard": "~3.3.1",
+        "node-red-node-markdown": "~0.1.4",
+        "node-red-node-ui-list": "~0.3.6",
+        "node-red": "3.0.2",
+        "openai": "latest",
+        "moment": "^2.29.4",
+        "node-red-contrib-moment": "~4.0.0"
+    }
+}

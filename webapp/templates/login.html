@@ -1,0 +1,203 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <title>BNBC TEST LOGIN</title>
+  {% with libs="bootstrap,jquery,jquery-ui,underscore" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+  {% include "_css.html" %}
+{% endblock %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block js_globals %}
+{% endblock %}
+
+{% block js_functions %}
+function doSearch() {
+  var email = $('#email').val().trim();
+
+  $('#loader').show();
+  $('#form-field-container').html("");
+
+  Helpers.axPost( "{{ url_for('api.user_login_with_email') }}", {
+    "email": email,
+  }, (data) => {
+    var tmpl = tmplt('oooops');
+    if ( data.status == "ok" ) { tmpl = tmplt('verification_code'); }
+    if ( data.status == "email_invalid" ) { tmpl = tmplt('email_invalid');}
+    if ( data.status == "error" ) {  tmpl = tmplt('email_error');}
+    if ( data.status == "does_not_exist" ) { tmpl = tmplt('email_unknown_signup'); }
+    if ( data.status == "email_not_verified" ) { tmpl = tmplt('email_not_verified'); }
+    if ( data.status == "email_banned" ) { tmpl = tmplt('email_banned'); }
+
+    $('#form-field-container').html( tmpl({ msg: data.msg, email: email, status: data.status}) );
+    $('#loader').hide();
+  });
+}
+
+function doVerify() {
+  var ver_code = $('#ver_code').val().trim();
+
+  $('#loader').show();
+  $('#form-field-container').html("");
+
+  Helpers.axPost( "{{ url_for('api.user_login_verify_login_code') }}", {
+    "ver_code": ver_code,
+    }, (data) => {
+      if ( data.status == "ok" ) {
+        window.location = "{{ url_for('proposals') }}";
+        return;
+      }
+
+      var tmpl = tmplt('oooops');
+      if ( data.status == "failed" || data.status == "error" ) {
+        tmpl = tmplt('vercode_error');
+      }
+
+      $('#form-field-container').html(tmpl({ msg: data.msg, ver_code: ver_code, status: data.status }) );
+      $('#loader').hide();
+  });
+}
+{% endblock %}
+
+{% block js_onready %}
+{% endblock %}
+
+{% block underscore_templates %}
+  <div id="_tmpl_verification_code">
+    <!--
+      <div class="row mt-4" style="overflow-y: hidden; overflow-x: hidden;">
+        <div class="offset-1 col-10 offset-sm-2 col-sm-8">
+          You have been sent an email, please enter the code here.
+        </div>
+      </div>
+
+      <div class="row mt-4" style="overflow-y: hidden; overflow-x: hidden;">
+        <input autocomplete="false"
+                   autofocus
+                   type="text"
+                   id="ver_code"
+                   placeholder="Login code"></input>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-12 text-center">
+          <button
+            type="button"
+            onclick="doVerify(); return false;"
+            >Login</button>
+        </div>
+      </div>
+    -->
+  </div>
+
+  <div id="_tmpl_oooops">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, oooooops. Unhandled status '<%= status %>'.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_vercode_error">
+  <!--
+    <div class="offset-2 col-8 text-center">
+      Sorry, <%= ver_code %>: error <%= msg %>. Perhaps <a href="{{ url_for('login') }}">try again</a>.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_error">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, error <%= msg %>.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_unknown_signup">
+  <!--
+    <div class="offset-2 col-8 text-center">
+      Sorry, your Email <%= email %> is unkonwn to us, <a href="{{ url_for('register') }}">sign up!</a>
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_invalid">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, your Email <%= email %> is invalid.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_banned">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, your Email <%= email %> is banned, contact <a href="mailto:support@bidnbuy.club">support</a>.
+    </div>
+  -->
+  </div>
+
+  <div id="_tmpl_email_not_verified">
+  <!--
+    <div class="offset-2 col-8 text-center">
+    Sorry, your Email <%= email %> is not yet verified, <a href="{{ url_for('resend_verification_code') }}">try resending your verification code</a>.
+    </div>
+  -->
+  </div>
+{% endblock %}
+
+
+{% block body %}
+  <div class='row mt-4'>
+    <div class='col-12'>
+      <div class="container-fluid"
+           style="overflow-y: hidden; overflow-x: auto;">
+        <div class="row flex-row flex-nowrap" >
+          <img id=loader
+               width=30
+               height=30
+               style='display: none;'
+               src='/static/images/loader.svg'/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8">
+      {{ read_md_file('login') | markdown }}
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="offset-1 col-10 offset-sm-2 col-sm-8 offset-md-3 col-md-6 text-center">
+      <form autocomplete="off" onsubmit="doSearch(); return false;">
+        <div class="row"
+             id="form-field-container"
+             style="overflow-y: hidden; overflow-x: hidden;">
+          <input autocomplete="true"
+                 type="text"
+                 autofocus
+                 id="email"
+                 placeholder="Email"></input>
+
+          <div class="row mt-4">
+            <div class="col-12 text-center">
+              <button
+                class="btn btn-success btn-lg"
+                type="button"
+                onclick="doSearch(); return false;"
+                >Log Me In!</button>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+{% endblock %}

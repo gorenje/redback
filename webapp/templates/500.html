@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block head %}
+  <title>Death defying feats of server errorness</title>
+  {% with libs="bootstrap" %}
+    {% include "_jslibs.html" %}
+  {% endwith %}
+{% endblock %}
+
+  {% block body %}
+  <h6>
+  Something, similar to a sunflare, has hit the server.
+  </h6>
+
+  Message:
+  <br>
+  <code>
+    {{ error }}
+  </code>
+
+  <br>
+  Traceback:
+  <br>
+  <code style="white-space: pre-line;">
+    {{ trcbck }}
+  </code>
+{% endblock %}

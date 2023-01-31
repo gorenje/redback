@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon//apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/static/website.manifest">
+
+    {% block head %}
+    {% endblock %}
+
+    {% with libs="fontawesome" %}
+    {% include "_jslibs.html" %}
+    {% endwith %}
+
+    <script type="text/javascript">
+      {% block js_globals %}
+      {% endblock %}
+    </script>
+
+    <script type="text/javascript">
+      {% block js_functions %}
+      {% endblock %}
+    </script>
+
+    <script type="text/javascript">
+      {% block js_header %}
+      {% endblock %}
+    </script>
+
+    <style>
+      {% block inline_css %}
+      {% endblock %}
+    </style>
+
+    <script type="text/javascript" src="/static/startbootstrap-grayscale-gh-pages/js/scripts.js"></script>
+    <link rel="stylesheet" href="/static/startbootstrap-grayscale-gh-pages/css/styles.css"/>
+
+  </head>
+
+  <body id="main-body-elem" class='container pb-4'>
+    {# Good for showing exactly which breakpoint is set
+    {% include "_showbreakpoints.html" %}
+    #}
+
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          <img width="230px" class="img-fluid" src="/static/images/logo.svg"/>
+        </a>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+          <ul class="navbar-nav pl-4 ms-auto mb-2 mb-lg-0">
+            {% if session["user_id"] %}
+            <li class="nav-item">
+              <a class="nav-link"
+                 href="{{ url_for('account') }}">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link"
+                 href="{{ url_for('new_proposal_form') }}">Place</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link"
+                 href="{{ url_for('proposals') }}">Auctions</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link"
+                 href="{{ url_for('logout') }}">Logout</a>
+            </li>
+
+            {% else %}
+
+            <li class="nav-item">
+              <a class="nav-link"
+                 href="{{ url_for( 'register' ) }}">Sign Up</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link"
+                 href="{{ url_for( 'login' ) }}">Login</a>
+            </li>
+            {% endif %}
+          </ul>
+          <!--
+              <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+              </form>
+              -->
+        </div>
+      </div>
+    </nav>
+
+    {% block body %}
+    {% endblock %}
+
+    <div id="underscore_templates" style="display: none;">
+      {% block underscore_templates %}
+      {% endblock %}
+    </div>
+  </body>
+
+  <script type="text/javascript">
+    {% block js_footer %}
+    {% endblock %}
+  </script>
+
+  <script type="text/javascript">
+    try{
+    $(function(){
+    {% block js_onready %}
+    {% endblock %}
+    })
+    } catch (err){}
+  </script>
+</html>
