@@ -1,4 +1,4 @@
-# Redback - Node-Red as Backend
+# RedBack - Node-Red as Backend
 
 A initial attempt to use [Node-Red](https://nodered.org/) as a complete and inclusive backend for a web application.
 
@@ -76,20 +76,23 @@ Each step needs to be done in its own terminal window.
 
 After that, 
 
-- Node Red can be accessed via [http://127.0.0.1:1880](http://127.0.0.1:1880), and 
-- the web frontend via [http://127.0.0.1:8082](http://127.0.0.1:8082).
+- Node-Red flows can be accessed via [http://127.0.0.1:1880](http://127.0.0.1:1880),
+- the web frontend via [http://127.0.0.1:8082](http://127.0.0.1:8082), and
+- the Admin tool via [http://127.0.0.1:1880/ui](http://127.0.0.1:1880/ui) (the Node-Red dashboard).
 
-I won't go into the details of sign up, login and create auctions, that is beyond the scope. 
+I won't go into the details of sign up, login and create auctions, that is beyond the scope.
 
 ## Repository Structure
 
-I have deployed all this to Heroku and hence the top-level structure is a python webapp that is deployable to heroku.
+I have deployed all this to Heroku and hence the top-level structure is a Python webapp that is deployable to heroku. The `webapp` directory is a classic [Flask](https://palletsprojects.com/p/flask/) project, nothing special about it.
 
 Node-Red is deployed by updating flows on heroku. I installed Node-Red using this [repo](https://github.com/gorenje/node-red-heroku). The Node-Red [flow.json](/node-red/data/flows.json) contains the entire backend, credentials are stored in `.env` files on the top-level.
 
-When running Node-Red locally, changes made to the flow are stored in the repo, i.e., each deploy overwrites the `flows.json` in this repo. 
+When running Node-Red locally, changes made to the flow are stored in the repo, i.e., each deploy overwrites the `flows.json` in the repository. 
 
-The [database schema](/postgres/database-schema.sql) was generated using [pgModeler](https://pgmodeler.io/) which meant that I used a lot more functionality within the database than in the application. For example, `updated_at` fields are updated via postgres triggers and not via an ORM. Database changes are trigger and will remain so.
+The [database schema](/postgres/database-schema.sql) was generated using [pgModeler](https://pgmodeler.io/) which meant that I used a lot more functionality within the database than in the application. For example, `updated_at` fields are updated via Postgres triggers and not via an ORM. 
+
+Database changes are tricky and will remain so. There are no migrations concept. pgModeler can do diffs between models and existing databases, however these are destructive, i.e., dropping a table to add a column to that table. Diffs can be useful but should be handled with care.
 
 ## Lesson Learnings
 
