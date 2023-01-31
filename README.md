@@ -67,12 +67,17 @@ Minimum requirement are [make](https://en.wikipedia.org/wiki/Make_(software)) an
 
 Steps:
 
+- `git clone git@github.com:gorenje/redback.git` 
+- `cd redback`
 - `make start-nodered` will initialise, start both Node-Red and Postgres. Redis is also started for the Python frontend.
 - `make start-webapp` will start the Python frontend.
 
 Each step needs to be done in its own terminal window.
 
-After that, Node Red can be accessed via [http://127.0.0.1:1880](http://127.0.0.1:1880) and the web frontend via [http://127.0.0.1:8082](http://127.0.0.1:8082).
+After that, 
+
+- Node Red can be accessed via [http://127.0.0.1:1880](http://127.0.0.1:1880), and 
+- the web frontend via [http://127.0.0.1:8082](http://127.0.0.1:8082).
 
 I won't go into the details of sign up, login and create auctions, that is beyond the scope. 
 
