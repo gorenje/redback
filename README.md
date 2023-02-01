@@ -4,7 +4,19 @@ A initial attempt to use [Node-Red](https://nodered.org/) as a complete and incl
 
 The web application is a minimal-viable bidding platform, the aim is to allow users to create auctions quickly and easily without major overhead. User registration and login is done via email and login codes are sent via email.
 
-A big warning from the start: everything I describe here is **working in progress**, must of the features are implemented but aren't rock-solid or cover every possible eventuallity.
+A big warning from the start: everything I describe here is **working in progress**, must of the features are implemented but aren't rock-solid or cover every possible eventuality.
+
+**Update/Clarification**
+
+Having had a conversation about this project on the [Node-Red forum](https://discourse.nodered.org/t/redback-node-red-as-backend/74481), I should clarify what I am trying to achieve here. To put it in a nutshell:
+
+> Node-Red becomes that interactive "UML diagram" that can be modified and immediately the code is changed: diagram and code remain in sync.
+
+Node-Red is obviously not UML, nor does it pretend to be. But it has the ability to represent code and logic visually *allowing* Node-Red to become the central "business logic engine" that can be modified by business people. 
+
+Node-Red *can* represent *business* logic visually and therefore that logic more accessible for non-programmers.
+
+Using this idea, I tried to create a project to demonstrate this usage of Node-Red as a "UML-like business logic engine". That Node-Red was not invented to scratch that itch is clear, however it can be *misused* to scratch that itch!
 
 ## Proof of Concept.
 
