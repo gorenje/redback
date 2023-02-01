@@ -94,7 +94,7 @@ The [database schema](/postgres/database-schema.sql) was generated using [pgMode
 
 Database changes are tricky and will remain so. There are no migrations concept. pgModeler can do diffs between models and existing databases, however these are destructive, i.e., dropping a table to add a column to that table. Diffs can be useful but should be handled with care.
 
-## Lesson Learnings
+## Lessons Learnt
 
 These are all my personal opinions and learnings, your mileage will vary.
 
