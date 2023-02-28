@@ -24,6 +24,7 @@ This is an attempt to partially implement everything that is required for a prod
 
 Once everything is in place, it can be extended as necessary. Production ready includes quality assurance and customer support (for example), hence time was spent building tools that support those activities.
 
+
 ## Motivation
 
 I have always been a big fan of [Yahoo Pipes](https://en.wikipedia.org/wiki/Yahoo!_Pipes) and have been looking for a similar tool for years. [Node-Red](https://nodered.org/) is an superb emulation of Yahoo Pipes:
@@ -32,6 +33,10 @@ I have always been a big fan of [Yahoo Pipes](https://en.wikipedia.org/wiki/Yaho
 
 > It provides a browser-based editor that makes it easy to wire together flows using the wide range of nodes in the palette that can be deployed to its runtime in a single-click.
 
+![](images/as_designed.png)
+
+Node-Red was designed for IoT applications using events and data streams to provide an overview dashboard. Of course, this is an over simplification - Node-Red can do many things so why not as a backend!
+
 So I decided to have a play around with it and initially had no idea what I could do with it (not having any IoT device at home). Then I had an idea for an auction/bidding site and thought that I would try out Node-Red instead of the usual Python front and backend solution. 
 
 ## Bidding/Auction Platform - why?
@@ -39,6 +44,8 @@ So I decided to have a play around with it and initially had no idea what I coul
 Because there isn't just one type of Apple(tm) in this world.
 
 The idea behind this platform is a slightly different idea than normal bidding platforms. Normal auctions sellers make buyers, what if this is turned around and buyers make sellers? I become a buyer when I have the highest bid for something someone is selling, what if I offer to buy something from someone who never intended to sell it?
+
+Platform is available at [bidnbuy.club](https://bidnbuy.club).
 
 ## Architecture & Features & Design Decisions
 
@@ -49,7 +56,10 @@ Architecture is very simple:
 - Python as web frontend solely interacts with the Node-Red provided API, no direct contact to Postgres;
 - Web-front using jQuery and connecting to the Node-Red (web-)socket endpoint.
 
+![](images/as_backend.png)
+
 Whether this scales is another story. But it has many advantages over coding a backend in Python on some other editor-based programming-languages.
+
 
 ### Design Decisions
 
